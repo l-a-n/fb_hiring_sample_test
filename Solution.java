@@ -103,22 +103,23 @@ public class Solution {
                                 maximum number of moves*/
     private int[] in; /* represents the initial configuration */
     private int[] out; /* represents the final configuration */
-    private int[] tops; /* contains for each peg the radius (hence the number) of the disc on top of it */
+    private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
     private boolean limitReached; /* set at true whenever the maximum number of moves 
                                      have been reached for the path that is being built at that moment */
     private int previousMoveStart; /* the number of the initial disc in the last performed move; 
                                       is used to avoid making two opposite moves one right after the other */
     private int previousMoveEnd; /* the number of the final disc in the last performed move;
                                       is used to avoid making two opposite moves one right after the other */
-    public final static int MAX_MOVES = 10; /* the desired maximum number of moves for the solution */
+    public final static int MAX_MOVES = 5; /* the desired maximum number of moves for the solution */
 
-    // Constructor. Initializes what needs to be.
+    /* Constructor. Initializes what needs to be */
     public Solution(int discs, int pegs) {
         this.discs = discs;
         this.pegs = pegs;
         init();
     }
-    // Initialization
+
+    /* Initialization */
     private void init() {
         path = new ArrayList<Node>(MAX_MOVES);
         limitReached = false; /* not really necessary according to the Java language spec but still */
@@ -128,20 +129,24 @@ public class Solution {
         previousMoveStart = -1;
         previousMoveEnd = -1;
     }
-    // Used for filling up an array of integers with integers
+
+    /* Used for filling up an array of integers with integers */
     private void fillTab(int [] tab, int elt, int idx) {
         if ((idx >= 0) && (idx < tab.length))
             tab[idx] = elt;
     }
-    // For filling up the array representing the initial configuration
+
+    /* Used for filling up the in array */
     public void fillIn(int elt, int idx) {
         fillTab(in, elt, idx);
     }
-    // For filling up the array representing the initial configuration
+
+    /* Used for filling up the out array */
     public void fillOut(int elt, int idx) {
         fillTab(out, elt, idx);
     }
-    // Fills up the array containing the numbers of the discs on top for each peg
+
+    /* Fills up the tops array */
     public void fillTops() {
         int i;
 
@@ -149,7 +154,8 @@ public class Solution {
             tops[i] = getTop(in, i);
         }
     }
-    // returns the number of the disc on top of a given peg for a given initial configuration
+
+    /* Returns the number of the topmost disc of a given peg for a given configuration */
     public int getTop(int [] tab, int peg) {
         int i, result = -1;
 
@@ -162,7 +168,7 @@ public class Solution {
         return result;
     }
 
-    /* Performs a move from peg #peg1 to peg #peg2*/
+    /* Performs a move from peg1 to peg2 */
     public void move(int [] tabIn, int [] tabTops, int peg1, int peg2) {
         tabIn[tabTops[peg1]] = peg2 + 1;
         tabTops[peg1] = getTop(tabIn, peg1);;
@@ -170,13 +176,13 @@ public class Solution {
         previousMoveStart = peg1;
         previousMoveEnd = peg2;
     }
-    
+
     /* The procedure doing the main job. 
        For a given temporary path being built and the current configuration of
        the discs and pegs, attempts to perform a move from peg1 to peg2 if the
        limit of moves hasn't been reached yet. If the move is possible, it is
-       performed and a recursive call is made if neither the subsequent path does
-       not match the final configuration and neither the limit of moves is reached */
+       performed and a recursive call is made if neither the subsequent
+       matches the final configuration and neither the limit of moves is reached */
     private void step(List<Node> l, int [] tabIn, int [] tabTops, int peg1, 
                         int peg2) {
         List<Node> tmp = new ArrayList<Node>(l), tmp_;
@@ -187,7 +193,7 @@ public class Solution {
         if (tmp.size() >= MAX_MOVES)
             limitReached = true;
         else if (limitReached)
-            limitReached = false; /* this is useful for making sure we backtrack for just one step when a recurvive call returns */
+            limitReached = false; /* This is useful for making sure we backtrack for just one step when a recurvive call returns */
         top1 = getTop(tmpIn, peg1);
         top2 = getTop(tmpIn, peg2);
         if (!limitReached && (peg1 != peg2) && 
@@ -223,6 +229,7 @@ public class Solution {
             }
         }
     }
+
     // Path builder
     public void buildPath() {
         List<Node> path_ = new ArrayList<Node>(MAX_MOVES);
@@ -235,7 +242,8 @@ public class Solution {
             }
         }
     }
-    // If a solution was found, displays its moves
+
+    /* If a solution was found, displays its moves */
     public void display() {
         if (!path.isEmpty()) {
             System.out.println(path.get(path.size() - 1).getDepth());
@@ -244,8 +252,8 @@ public class Solution {
             }
         }
     }
-    
-    // Reads the input data, calculates a solution and eventually displays it
+
+    /* Reads the input data, calculates a solution and eventually displays it */
     public static void main(String[] args) {
         int i, discs, pegs;
         Scanner scanner = new Scanner(System.in);
@@ -269,7 +277,7 @@ public class Solution {
         double duration = System.nanoTime() - startTime;
         solution.display();
         System.out.println("computation performed in " +
-                           (duration / 1000000000) + " second(s)"); // Displays the computation time
+                           (duration / 1000000000) + " second(s)"); /* Displays the computation time */
     }
 }
 
