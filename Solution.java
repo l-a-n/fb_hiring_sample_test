@@ -181,7 +181,7 @@ public class Solution {
        For a given temporary path being built and the current configuration of
        the discs and pegs, attempts to perform a move from peg1 to peg2 if the
        limit of moves hasn't been reached yet. If the move is possible, it is
-       performed and a recursive call is made only if neither the subsequent
+       performed and a recursive call is made only if neither the subsequent path
        matches the final configuration nor the limit of moves is reached */
     private void step(List<Node> l, int [] tabIn, int [] tabTops, int peg1, 
                         int peg2) {
