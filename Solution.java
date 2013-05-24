@@ -109,13 +109,14 @@ public class Solution {
     private int previousMoveStart; /* the number of the initial disc in the last performed move; 
                                       is used to avoid making two opposite moves one right after the other */
     private int previousMoveEnd; /* the number of the final disc in the last performed move;
-                                      is used to avoid making two opposite moves one right after the other */
-    public final static int MAX_MOVES = 5; /* the desired maximum number of moves for the solution */
+                                is used to avoid making two opposite moves one right after the other */
+    public final int MAX_MOVES; /* the desired maximum number of moves for the solution */
 
     /* Constructor. Initializes what needs to be */
-    public Solution(int discs, int pegs) {
+    public Solution(int discs, int pegs, int maxMoves) {
         this.discs = discs;
         this.pegs = pegs;
+        MAX_MOVES = maxMoves;
         init();
     }
 
@@ -264,7 +265,7 @@ public class Solution {
             System.err.println("error: number of discs or pegs must be > 0");
             return;
         }
-        Solution solution = new Solution(discs, pegs);
+        Solution solution = new Solution(discs, pegs, Integer.valueOf(args[0]).intValue());
         for (i=0; i<discs; i++) {
             solution.fillIn(scanner.nextInt(), i);
         }
