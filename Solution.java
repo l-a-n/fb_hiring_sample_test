@@ -90,6 +90,9 @@ class Node {
     public int getDepth() {
         return depth;
     }
+    public String toString() {
+        return from + " -> " + to + ", " + depth;
+    }
 }
 
 /* The main class*/
@@ -106,10 +109,8 @@ public class Solution {
     private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
     private boolean limitReached; /* set at true whenever the maximum number of moves 
                                      have been reached for the path that is being built at that moment */
-    private int previousMoveStart; /* the number of the initial disc in the last performed move; 
+    private Integer previousMoveEnd; /* the number of the final disc in the last performed move;
                                       is used to avoid making two opposite moves one right after the other */
-    private int previousMoveEnd; /* the number of the final disc in the last performed move;
-                                is used to avoid making two opposite moves one right after the other */
     public final int MAX_MOVES; /* the desired maximum number of moves for the solution */
 
     /* Constructor. Initializes what needs to be */
@@ -127,8 +128,7 @@ public class Solution {
         in = new int[discs];
         out = new int[discs];
         tops = new int[pegs];
-        previousMoveStart = -1;
-        previousMoveEnd = -1;
+        previousMoveEnd = Integer.valueOf(-1);
     }
 
     /* Used for filling up an array of integers with integers */
@@ -151,7 +151,7 @@ public class Solution {
     public void fillTops() {
         int i;
 
-        for (i=0; i<pegs; i++) {
+        for (i=0; i < pegs; i++) {
             tops[i] = getTop(in, i);
         }
     }
@@ -160,7 +160,7 @@ public class Solution {
     public int getTop(int [] tab, int peg) {
         int i, result = -1;
 
-        for(i=0; i<tab.length; i++) {
+        for(i=0; i < tab.length; i++) {
             if (tab[i] == peg + 1) {
                 result = i;
                 break;
@@ -170,12 +170,11 @@ public class Solution {
     }
 
     /* Performs a move from peg1 to peg2 */
-    public void move(int [] tabIn, int [] tabTops, int peg1, int peg2) {
+    public void move(int [] tabIn, int [] tabTops, int peg1, int peg2, Integer lastPeg) {
         tabIn[tabTops[peg1]] = peg2 + 1;
         tabTops[peg1] = getTop(tabIn, peg1);;
         tabTops[peg2] = getTop(tabIn, peg2);
-        previousMoveStart = peg1;
-        previousMoveEnd = peg2;
+        lastPeg = peg2;
     }
 
     /* The procedure doing the main job. 
@@ -185,45 +184,49 @@ public class Solution {
        performed and a recursive call is made only if neither the subsequent path
        matches the final configuration nor the limit of moves is reached */
     private void step(List<Node> l, int [] tabIn, int [] tabTops, int peg1, 
-                        int peg2) {
+                        int peg2, Integer lastPeg) {
         List<Node> tmp = new ArrayList<Node>(l), tmp_;
         int [] tmpIn = Arrays.copyOf(tabIn, tabIn.length), tmpIn_;
         int [] tmpTops = Arrays.copyOf(tabTops, tabTops.length), tmpTops_;
         int top1, top2;
+        Integer lastPeg_;
 
         if (tmp.size() >= MAX_MOVES)
             limitReached = true;
         else if (limitReached)
-            limitReached = false; /* This is useful for making sure we backtrack for just one step when a recurvive call returns */
-        top1 = getTop(tmpIn, peg1);
-        top2 = getTop(tmpIn, peg2);
-        if (!limitReached && (peg1 != peg2) && 
-            ((top1 >=0) && ((top1 < top2) || (top2 == -1))) && 
-            !((peg1 == previousMoveEnd) && (peg2 == previousMoveStart))) {
-            move(tmpIn, tmpTops, peg1, peg2);
-            tmp.add(new Node(peg1 + 1, peg2 + 1, tmp.size() + 1));
-            if (tmp.size() == MAX_MOVES) {
-                limitReached = true;
-            }
-            if (Arrays.equals(tmpIn,out)) {
-                if (path.isEmpty() || (path.size() > tmp.size())) {
-                    path = tmp;
+            limitReached = false; /* This is useful for making sure we backtrack for just one step when a recurvive call returns */ 
+        if (!limitReached && (peg1 != lastPeg)) {
+            top1 = getTop(tmpIn, peg1);
+            top2 = getTop(tmpIn, peg2);
+            if ((top1 >= 0) && ((top1 < top2) || (top2 == -1))) {
+                move(tmpIn, tmpTops, peg1, peg2, lastPeg);
+                tmp.add(new Node(peg1 + 1, peg2 + 1, tmp.size() + 1));
+                if (tmp.size() == MAX_MOVES) {
+                    limitReached = true;
                 }
-                return;
-            } else {
-                if (limitReached)
+                if (Arrays.equals(tmpIn,out)) {
+                    if (path.isEmpty() || (path.size() > tmp.size())) {
+                        path = tmp;
+                    }
                     return;
-                int a, b, i, j;
-                for (i=0; i<pegs; i++) {
-                    tmp_ = new ArrayList<Node>(tmp);
-                    tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
-                    tmpTops_ = Arrays.copyOf(tmpTops, tmpTops.length);
-                    a = getTop(tmpIn, i);
-                    for (j=0; j<pegs; j++) {
-                        b = getTop(tmpIn, j);
-                        if (!((i == peg2) && (j == peg1)) && ((a >= 0) && 
-                            ((b == -1) || (a < b)))) {
-                            step(tmp_, tmpIn_, tmpTops_, i, j);
+                } else {
+                    if (limitReached)
+                        return;
+                    int a, b, i, j;  
+                    lastPeg_ = peg2;
+                    for (i=0; i < pegs; i++) {
+                        tmp_ = new ArrayList<Node>(tmp);
+                        tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
+                        tmpTops_ = Arrays.copyOf(tmpTops, tmpTops.length);
+                        if (i != lastPeg_) {
+                            a = getTop(tmpIn, i);
+                            for (j=0; j < pegs; j++) {
+                                if (i != j) {
+                                    b = getTop(tmpIn, j);
+                                    if ((a >= 0) && ((b == -1) || (a < b)))
+                                        step(tmp_, tmpIn_, tmpTops_, i, j, lastPeg_);
+                                }
+                            }
                         }
                     }
                 }
@@ -235,11 +238,12 @@ public class Solution {
     public void buildPath() {
         List<Node> path_ = new ArrayList<Node>(MAX_MOVES);
         int i, j;
-        for (i=0; i<pegs; i++) {
+        for (i=0; i < pegs; i++) {
             if (!path_.isEmpty())
                 path_.clear();
-            for (j=0; (j<pegs); j++) {
-                step(path_, in, tops, i, j);
+            for (j=0; j < pegs; j++) {
+                if (i != j)
+                    step(path_, in, tops, i, j, previousMoveEnd);
             }
         }
     }
@@ -256,29 +260,35 @@ public class Solution {
 
     /* Reads the input data, calculates a solution and eventually displays it */
     public static void main(String[] args) {
-        int i, discs, pegs;
+        int i, discs, pegs, maxMoves;
+        maxMoves = Integer.valueOf(args[0]).intValue();
+        if (maxMoves > 13) {
+            System.err.println("Number of moves must not be greater than 13");
+            System.exit(-1);
+        } 
         Scanner scanner = new Scanner(System.in);
-
         discs = scanner.nextInt();
         pegs = scanner.nextInt();
         if (discs * pegs <= 0){
-            System.err.println("error: number of discs or pegs must be > 0");
-            return;
+            System.err.println("Number of discs/pegs must be greater than 0");
+            System.exit(-2);
         }
-        Solution solution = new Solution(discs, pegs, Integer.valueOf(args[0]).intValue());
-        for (i=0; i<discs; i++) {
-            solution.fillIn(scanner.nextInt(), i);
+        else {
+            Solution solution = new Solution(discs, pegs, maxMoves);
+            for (i=0; i<discs; i++) {
+                solution.fillIn(scanner.nextInt(), i);
+            }
+            for (i=0; i<discs; i++) {
+                solution.fillOut(scanner.nextInt(), i);
+            }
+            solution.fillTops();
+            double startTime = System.nanoTime();
+            solution.buildPath();
+            double duration = System.nanoTime() - startTime;
+            solution.display();
+            System.out.println("computation performed in " +
+                               (duration / 1000000000) + " second(s)"); /* Displays the computation time */
         }
-        for (i=0; i<discs; i++) {
-            solution.fillOut(scanner.nextInt(), i);
-        }
-        solution.fillTops();
-        double startTime = System.nanoTime();
-        solution.buildPath();
-        double duration = System.nanoTime() - startTime;
-        solution.display();
-        System.out.println("computation performed in " +
-                           (duration / 1000000000) + " second(s)"); /* Displays the computation time */
     }
 }
 
