@@ -104,9 +104,10 @@ public class Solution {
     private int[] in; /* represents the initial configuration */
     private int[] out; /* represents the final configuration */
     private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
+    private int[] notAllowed;
     private boolean limitReached; /* set at true whenever the maximum number of moves 
                                      have been reached for the path that is being built at that moment */
-    private Integer previousMoveEnd; /* the number of the final disc in the last performed move;
+    private int previousMoveEnd; /* the number of the final disc in the last performed move;
                                       is used to avoid making two opposite moves one right after the other */
     public final int MAX_MOVES; /* the desired maximum number of moves for the solution */
 
@@ -125,7 +126,11 @@ public class Solution {
         in = new int[discs];
         out = new int[discs];
         tops = new int[pegs];
-        previousMoveEnd = Integer.valueOf(-1);
+        notAllowed = new int[pegs];
+        for (int i=0; i < pegs; i++) {
+            notAllowed[i] = -1;
+        }
+        previousMoveEnd = -1;
     }
 
     /* Used for filling up an array of integers with integers */
@@ -167,11 +172,12 @@ public class Solution {
     }
 
     /* Performs a move from peg1 to peg2 */
-    public void move(int [] tabIn, int [] tabTops, int peg1, int peg2, Integer lastPeg) {
+    public void move(int [] tabIn, int [] tabTops, int[] tabNotAllowed, int peg1, int peg2) {
         tabIn[tabTops[peg1]] = peg2 + 1;
-        tabTops[peg1] = getTop(tabIn, peg1);;
+        tabTops[peg1] = getTop(tabIn, peg1);
         tabTops[peg2] = getTop(tabIn, peg2);
-        lastPeg = peg2;
+        tabNotAllowed[peg1] = tabTops[peg2];
+        if (tabNotAllowed[peg2] != -1) tabNotAllowed[peg2] = -1;
     }
 
     /* The procedure doing the main job. 
@@ -180,13 +186,14 @@ public class Solution {
        limit of moves hasn't been reached yet. If the move is possible, it is
        performed and a recursive call is made only if neither the subsequent path
        matches the final configuration nor the limit of moves is reached */
-    private void step(List<Node> l, int [] tabIn, int [] tabTops, int peg1, 
-                        int peg2, Integer lastPeg) {
+    private void step(List<Node> l, int [] tabIn, int [] tabTops, int [] tabNotAllowed, int peg1, 
+                        int peg2, int lastPeg) {
         List<Node> tmp = new ArrayList<Node>(l), tmp_;
         int [] tmpIn = Arrays.copyOf(tabIn, tabIn.length), tmpIn_;
         int [] tmpTops = Arrays.copyOf(tabTops, tabTops.length), tmpTops_;
+        int [] tmpNotAllowed = Arrays.copyOf(tabNotAllowed, tabNotAllowed.length), tmpNotAllowed_;
+        
         int top1, top2;
-        Integer lastPeg_;
 
         if (tmp.size() >= MAX_MOVES)
             limitReached = true;
@@ -195,8 +202,8 @@ public class Solution {
         if (!limitReached && (peg1 != lastPeg)) {
             top1 = getTop(tmpIn, peg1);
             top2 = getTop(tmpIn, peg2);
-            if ((top1 >= 0) && ((top1 < top2) || (top2 == -1))) {
-                move(tmpIn, tmpTops, peg1, peg2, lastPeg);
+            if ((top1 != tmpNotAllowed[peg2]) && (top1 >= 0) && ((top1 < top2) || (top2 == -1))) {
+                move(tmpIn, tmpTops, tmpNotAllowed, peg1, peg2);
                 tmp.add(new Node(peg1 + 1, peg2 + 1, tmp.size() + 1));
                 if (tmp.size() == MAX_MOVES) {
                     limitReached = true;
@@ -210,18 +217,19 @@ public class Solution {
                     if (limitReached)
                         return;
                     int a, b, i, j;  
-                    lastPeg_ = peg2;
                     for (i=0; i < pegs; i++) {
                         tmp_ = new ArrayList<Node>(tmp);
                         tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
                         tmpTops_ = Arrays.copyOf(tmpTops, tmpTops.length);
-                        if (i != peg2) {
+                        tmpNotAllowed_ = Arrays.copyOf(tmpNotAllowed, tmpNotAllowed.length);
+                        lastPeg = peg2;
+                        if (i != lastPeg) {
                             a = getTop(tmpIn, i);
                             for (j=0; j < pegs; j++) {
-                                if (i != j) {
+                                if ((i != j) && (a != tmpNotAllowed_[j])) {
                                     b = getTop(tmpIn, j);
                                     if ((a >= 0) && ((b == -1) || (a < b)))
-                                        step(tmp_, tmpIn_, tmpTops_, i, j, lastPeg_);
+                                        step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j, lastPeg);
                                 }
                             }
                         }
@@ -240,7 +248,7 @@ public class Solution {
                 path_.clear();
             for (j=0; j < pegs; j++) {
                 if (i != j)
-                    step(path_, in, tops, i, j, previousMoveEnd);
+                    step(path_, in, tops, notAllowed, i, j, previousMoveEnd);
             }
         }
     }
@@ -266,7 +274,7 @@ public class Solution {
         Scanner scanner = new Scanner(System.in);
         discs = scanner.nextInt();
         pegs = scanner.nextInt();
-        if (discs * pegs <= 0){
+        if (discs * pegs <= 0) {
             System.err.println("Number of discs/pegs must be greater than 0");
             System.exit(-2);
         }
