@@ -90,9 +90,6 @@ class Node {
     public int getDepth() {
         return depth;
     }
-    public String toString() {
-        return from + " -> " + to + ", " + depth;
-    }
 }
 
 /* The main class*/
@@ -218,7 +215,7 @@ public class Solution {
                         tmp_ = new ArrayList<Node>(tmp);
                         tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
                         tmpTops_ = Arrays.copyOf(tmpTops, tmpTops.length);
-                        if (i != lastPeg_) {
+                        if (i != peg2) {
                             a = getTop(tmpIn, i);
                             for (j=0; j < pegs; j++) {
                                 if (i != j) {
