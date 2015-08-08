@@ -173,10 +173,11 @@ public class Solution {
 
     /* Performs a move from peg1 to peg2 */
     public void move(int [] tabIn, int [] tabTops, int[] tabNotAllowed, int peg1, int peg2) {
-        tabIn[tabTops[peg1]] = peg2 + 1;
+        int moved_disk = tabTops[peg1];       
+	       tabIn[moved_disk] = peg2 + 1;
         tabTops[peg1] = getTop(tabIn, peg1);
-        tabTops[peg2] = getTop(tabIn, peg2);
-        tabNotAllowed[peg1] = tabTops[peg2];
+        tabTops[peg2] = moved_disk;
+        tabNotAllowed[peg1] = moved_disk;
         if (tabNotAllowed[peg2] != -1) tabNotAllowed[peg2] = -1;
     }
 
@@ -216,7 +217,7 @@ public class Solution {
                 } else {
                     if (limitReached)
                         return;
-                    int a, b, i, j;  
+                    int i, j;  
                     for (i=0; i < pegs; i++) {
                         tmp_ = new ArrayList<Node>(tmp);
                         tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
@@ -226,11 +227,7 @@ public class Solution {
                         if (i != lastPeg) {
                             a = getTop(tmpIn, i);
                             for (j=0; j < pegs; j++) {
-                                if ((i != j) && (a != tmpNotAllowed_[j])) {
-                                    b = getTop(tmpIn, j);
-                                    if ((a >= 0) && ((b == -1) || (a < b)))
-                                        step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j, lastPeg);
-                                }
+                                step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j, lastPeg);
                             }
                         }
                     }
