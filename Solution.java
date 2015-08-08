@@ -225,7 +225,6 @@ public class Solution {
                         tmpNotAllowed_ = Arrays.copyOf(tmpNotAllowed, tmpNotAllowed.length);
                         lastPeg = peg2;
                         if (i != lastPeg) {
-                            a = getTop(tmpIn, i);
                             for (j=0; j < pegs; j++) {
                                 step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j, lastPeg);
                             }
