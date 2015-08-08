@@ -104,7 +104,7 @@ public class Solution {
     private int[] in; /* represents the initial configuration */
     private int[] out; /* represents the final configuration */
     private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
-    private int[] notAllowed;
+    private int[] notAllowed; /* if notAllowed[p] == r, the disc of radius r cannot be put on peg p+1 , if notAllowed[p] == -1 any disc radius can be put on peg p+1 given the move respects the rule */
     private boolean limitReached; /* set at true whenever the maximum number of moves 
                                      have been reached for the path that is being built at that moment */
     private int previousMoveEnd; /* the number of the final disc in the last performed move;
