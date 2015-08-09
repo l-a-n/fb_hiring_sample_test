@@ -98,18 +98,18 @@ public class Solution {
                           its radius of type integer between 1 and the value of discs */
     private int pegs; /* the number of pegs, each one being represented by 
                          an integer between 1 and the value of pegs */
-    private List<Node> path; /* will contain the succession of moves solving 
+    public static List<Node> path; /* will contain the succession of moves solving 
                                 the problem if there's one for the specified
                                 maximum number of moves*/
     private int[] in; /* represents the initial configuration */
     private int[] out; /* represents the final configuration */
     private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
-    private int[] notAllowed; /* if notAllowed[p] == r, the disc of radius r cannot be put on peg p+1 , if notAllowed[p] == -1 any disc radius can be put on peg p+1 given the move respects the rule */
+    private int[] notAllowed; /* if notAllowed[p] == r then disc of radius r (r>0) CANNOT be put on top of peg p and if notAllowed[p] == -1 then any disc of radius lower than
+                                 getTop(conf,p) can be put atop peg p */
     private boolean limitReached; /* set at true whenever the maximum number of moves 
                                      have been reached for the path that is being built at that moment */
-    private int previousMoveEnd; /* the number of the final disc in the last performed move;
-                                      is used to avoid making two opposite moves one right after the other */
     public final int MAX_MOVES; /* the desired maximum number of moves for the solution */
+
 
     /* Constructor. Initializes what needs to be */
     public Solution(int discs, int pegs, int maxMoves) {
@@ -130,7 +130,6 @@ public class Solution {
         for (int i=0; i < pegs; i++) {
             notAllowed[i] = -1;
         }
-        previousMoveEnd = -1;
     }
 
     /* Used for filling up an array of integers with integers */
@@ -173,8 +172,8 @@ public class Solution {
 
     /* Performs a move from peg1 to peg2 */
     public void move(int [] tabIn, int [] tabTops, int[] tabNotAllowed, int peg1, int peg2) {
-        int moved_disk = tabTops[peg1];       
-	       tabIn[moved_disk] = peg2 + 1;
+	int moved_disk = tabTops[peg1];       
+	tabIn[moved_disk] = peg2 + 1;
         tabTops[peg1] = getTop(tabIn, peg1);
         tabTops[peg2] = moved_disk;
         tabNotAllowed[peg1] = moved_disk;
@@ -187,20 +186,18 @@ public class Solution {
        limit of moves hasn't been reached yet. If the move is possible, it is
        performed and a recursive call is made only if neither the subsequent path
        matches the final configuration nor the limit of moves is reached */
-    private void step(List<Node> l, int [] tabIn, int [] tabTops, int [] tabNotAllowed, int peg1, 
-                        int peg2, int lastPeg) {
+    private void step(List<Node> l, int [] tabIn, int [] tabTops, int [] tabNotAllowed, int peg1, int peg2) {
         List<Node> tmp = new ArrayList<Node>(l), tmp_;
         int [] tmpIn = Arrays.copyOf(tabIn, tabIn.length), tmpIn_;
         int [] tmpTops = Arrays.copyOf(tabTops, tabTops.length), tmpTops_;
         int [] tmpNotAllowed = Arrays.copyOf(tabNotAllowed, tabNotAllowed.length), tmpNotAllowed_;
-        
         int top1, top2;
 
         if (tmp.size() >= MAX_MOVES)
             limitReached = true;
         else if (limitReached)
             limitReached = false; /* This is useful for making sure we backtrack for just one step when a recurvive call returns */ 
-        if (!limitReached && (peg1 != lastPeg)) {
+        if (!limitReached) {
             top1 = getTop(tmpIn, peg1);
             top2 = getTop(tmpIn, peg2);
             if ((top1 != tmpNotAllowed[peg2]) && (top1 >= 0) && ((top1 < top2) || (top2 == -1))) {
@@ -210,9 +207,7 @@ public class Solution {
                     limitReached = true;
                 }
                 if (Arrays.equals(tmpIn,out)) {
-                    if (path.isEmpty() || (path.size() > tmp.size())) {
-                        path = tmp;
-                    }
+		    if (path.isEmpty() || (path.size() > tmp.size())) path = tmp;
                     return;
                 } else {
                     if (limitReached)
@@ -223,15 +218,15 @@ public class Solution {
                         tmpIn_ = Arrays.copyOf(tmpIn, tmpIn.length);
                         tmpTops_ = Arrays.copyOf(tmpTops, tmpTops.length);
                         tmpNotAllowed_ = Arrays.copyOf(tmpNotAllowed, tmpNotAllowed.length);
-                        lastPeg = peg2;
-                        if (i != lastPeg) {
+                        if (i != peg2) {
                             for (j=0; j < pegs; j++) {
-                                step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j, lastPeg);
+				if (j != i) step(tmp_, tmpIn_, tmpTops_, tmpNotAllowed_, i, j);
                             }
                         }
                     }
                 }
             }
+            else return;
         }
     }
 
@@ -239,21 +234,26 @@ public class Solution {
     public void buildPath() {
         List<Node> path_ = new ArrayList<Node>(MAX_MOVES);
         int i, j;
+        double startTime = System.nanoTime();
+
         for (i=0; i < pegs; i++) {
-            if (!path_.isEmpty())
-                path_.clear();
             for (j=0; j < pegs; j++) {
                 if (i != j)
-                    step(path_, in, tops, notAllowed, i, j, previousMoveEnd);
+                    step(path_, in, tops, notAllowed, i, j);
+                path_.clear();
             }
+        }
+        if (!path.isEmpty()) {
+            System.out.println("Solution found in " + (System.nanoTime() - startTime) / 1000000000 + " second(s):");
+            this.display(path);
         }
     }
 
     /* If a solution was found, displays its moves */
-    public void display() {
-        if (!path.isEmpty()) {
-            System.out.println(path.get(path.size() - 1).getDepth());
-            for (Node n: path) {
+    public void display(List<Node> l) {
+        if (!l.isEmpty()) {
+            System.out.println(l.get(l.size() - 1).getDepth());
+            for (Node n: l) {
                 System.out.println(n.getFrom() + " " + n.getTo());
             }
         }
@@ -263,8 +263,8 @@ public class Solution {
     public static void main(String[] args) {
         int i, discs, pegs, maxMoves;
         maxMoves = Integer.valueOf(args[0]).intValue();
-        if (maxMoves > 13) {
-            System.err.println("Number of moves must not be greater than 13");
+        if (maxMoves > 18) {
+            System.err.println("Number of moves must not be greater than 18");
             System.exit(-1);
         } 
         Scanner scanner = new Scanner(System.in);
@@ -283,13 +283,7 @@ public class Solution {
                 solution.fillOut(scanner.nextInt(), i);
             }
             solution.fillTops();
-            double startTime = System.nanoTime();
             solution.buildPath();
-            double duration = System.nanoTime() - startTime;
-            solution.display();
-            System.out.println("computation performed in " +
-                               (duration / 1000000000) + " second(s)"); /* Displays the computation time */
         }
     }
 }
-
