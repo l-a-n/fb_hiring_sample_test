@@ -63,6 +63,21 @@ import java.util.Scanner;
  *         2 1 
  *         3 1
  * 
+ *         Sample Input #02
+ *         6 4
+ *         1 2 1 2 3 4
+ *         2 2 1 1 3 4
+ * 
+ *         Sample Output #02
+ *         7
+ *         1 3
+ *         1 4
+ *         2 4
+ *         2 1
+ *         4 2
+ *         3 2
+ *         4 1
+ * 
  *         NOTE: You need to write the full code taking all inputs are from
  *         stdin and outputs to stdout If you are using "Java", the classname is
  *         "Solution"
@@ -94,22 +109,16 @@ class Node {
 
 /* The main class*/
 public class Solution {
-    private int discs; /* the number of discs, each one being represented by 
-                          its radius of type integer between 1 and the value of discs */
-    private int pegs; /* the number of pegs, each one being represented by 
-                         an integer between 1 and the value of pegs */
-    public static List<Node> path; /* will contain the succession of moves solving 
-                                the problem if there's one for the specified
-                                maximum number of moves*/
-    private int[] in; /* represents the initial configuration */
-    private int[] out; /* represents the final configuration */
-    private int[] tops; /* contains for each peg the radius (hence the number) of its topmost disc */
-    private int[] notAllowed; /* if notAllowed[p] == r then disc of radius r (r>0) CANNOT be put on top of peg p and if notAllowed[p] == -1 then any disc of radius lower than
-                                 getTop(conf,p) can be put atop peg p */
-    private boolean limitReached; /* set at true whenever the maximum number of moves 
-                                     have been reached for the path that is being built at that moment */
-    public final int MAX_MOVES; /* the desired maximum number of moves for the solution */
-
+    private int discs;				/* the number of discs, each one being represented by its radius of type integer between 1 and the value of discs */
+    private int pegs;				/* the number of pegs, each one being represented by an integer between 1 and the value of pegs */
+    public static List<Node> path;		/* will contain the succession of moves solving the problem if there's one for the specified max number of moves*/
+    private int[] in;				/* represents the initial configuration */
+    private int[] out;				/* represents the final configuration */
+    private int[] tops;				/* contains for each peg the radius (hence the number) of its topmost disc */
+    private int[] notAllowed;			/* if notAllowed[p] == r then disc of radius r (r>0) CANNOT be put on top of peg p and if notAllowed[p] == -1 then any disc of radius lower than 
+                                                   getTop(conf,p) can be put atop peg p */
+    private boolean limitReached;		/* set at true whenever the maximum number of moves have been reached for the path that is being built at that moment */
+    public final int MAX_MOVES;			/* the desired maximum number of moves for the solution */
 
     /* Constructor. Initializes what needs to be */
     public Solution(int discs, int pegs, int maxMoves) {
